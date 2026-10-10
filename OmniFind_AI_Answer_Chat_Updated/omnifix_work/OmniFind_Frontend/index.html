@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniFind — Universal WebAssembly HNSW Vector Search Engine</title>
+  <meta name="description" content="Universal multi-modal search engine covering Documents, PDFs, Images, Products, Code, Audio, and Educational content powered by C++ WebAssembly HNSW Vector Similarity and BM25 Hybrid Indexing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="brand-mark">✦</span>
+      <span class="brand-name">OmniFind <span class="brand-tech">WASM HNSW</span></span>
+    </a>
+    <div class="header-status" id="headerWasmStatus">
+      <span class="status-pulse"></span>
+      <span id="wasmBadgeText">⚡ Live API Search Ready</span>
+    </div>
+    <nav class="nav-links">
+      <a href="#search" class="nav-link">Search</a>
+      <a href="#categories" class="nav-link">Categories</a>
+      <button id="openHnswModalBtn" class="nav-btn-secondary" type="button">
+        <span class="btn-icon">⚙️</span> HNSW Graph Inspector
+      </button>
+      <button id="openAiChatBtn" class="nav-btn-primary ai-chat-nav-btn" type="button">
+        <span class="btn-icon">✦</span> AI Answer Chat
+      </button>
+      <button id="openIngestModalBtn" class="nav-btn-primary" type="button">
+        <span class="btn-icon">📤</span> Ingest Files
+      </button>
+      <button id="themeToggle" class="theme-toggle-btn" aria-label="Toggle theme">☾</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero" id="search">
+      <div class="hero-eyebrow">
+        <span class="eyebrow-badge">⚡ WEB ASSEMBLY HNSW VECTOR SEARCH</span>
+        <span class="eyebrow-sub">Web · Places/GPS · Documents · PDFs · Images · Products · Code · Audio · Science · Education</span>
+      </div>
+
+      <h1 class="hero-title">
+        Search everything.<br>
+        <span class="gradient-text">Powered by Vector Similarity & WASM HNSW.</span>
+      </h1>
+
+      <p class="hero-copy">
+        A multi-source search prototype for web references, places, books, images, products, code, music and scholarly research. Combines keyword ranking with vector-like feature hashing and optional server-side HNSW indexing.
+      </p>
+
+      <!-- Search Mode Switch -->
+      <div class="search-mode-selector" id="searchModeGroup">
+        <button class="mode-tab active" data-mode="hybrid" type="button">
+          <span class="tab-icon">🔀</span> Hybrid Search (Vector + BM25)
+        </button>
+        <button class="mode-tab" data-mode="vector" type="button">
+          <span class="tab-icon">⚡</span> WASM HNSW Vector Search
+        </button>
+        <button class="mode-tab" data-mode="keyword" type="button">
+          <span class="tab-icon">🔤</span> BM25 Keyword Search
+        </button>
+      </div>
+
+      <!-- Main Search Box -->
+      <form id="searchForm" class="search-box">
+        <span class="search-icon">⌕</span>
+        <input 
+          id="searchInput" 
+          type="search" 
+          placeholder="Search documents, neural networks, 4K cameras, synthwave beats, python code, or quantum physics..." 
+          aria-label="Search query"
+          autocomplete="off"
+        >
+        <button id="clearSearchBtn" type="button" class="clear-btn hidden" aria-label="Clear search">✕</button>
+        <button id="useLocationBtn" type="button" class="nav-btn-secondary hidden" title="Allow location access to search nearby places">📍 Use my location</button>
+        <button type="submit" class="search-submit-btn">
+          <span>Search</span> →
+        </button>
+      </form>
+
+      <!-- Quick Query Shortcuts -->
+      <div class="quick-shortcuts">
+        <span class="shortcut-label">Try searching:</span>
+        <button class="shortcut-tag" data-query="transformer neural network">📄 Transformer NN</button>
+        <button class="shortcut-tag" data-query="wireless headphones">🎧 Wireless Headphones</button>
+        <button class="shortcut-tag" data-query="cyberpunk neon city">🖼️ Cyberpunk Neon</button>
+        <button class="shortcut-tag" data-query="rust vector search simd">🦀 Rust SIMD Vector</button>
+        <button class="shortcut-tag" data-query="lofi synthwave focus beats">🎵 Lo-Fi Beats</button>
+        <button class="shortcut-tag" data-query="quantum mechanics calculus">⚛️ Quantum Calculus</button>
+      </div>
+
+      <!-- Advanced Controls Panel Toggle -->
+      <div class="advanced-controls-container">
+        <button id="toggleControlsBtn" class="controls-toggle-btn" type="button">
+          <span>⚙️ HNSW Index & Metric Parameters</span>
+          <span id="controlsArrow">▼</span>
+        </button>
+
+        <div id="controlsDrawer" class="controls-drawer hidden">
+          <div class="controls-grid">
+            <!-- Metric Selector -->
+            <div class="control-group">
+              <label for="metricSelect">Distance Metric</label>
+              <select id="metricSelect">
+                <option value="cosine" selected>Cosine Distance (1 - cos θ)</option>
+                <option value="l2">Euclidean Distance (L2)</option>
+                <option value="dot">Inner Product (Dot Product)</option>
+              </select>
+            </div>
+
+            <!-- Top K Slider -->
+            <div class="control-group">
+              <label for="kCountRange">Top Results (k-NN): <span id="kCountValue" class="value-badge">12</span></label>
+              <input type="range" id="kCountRange" min="4" max="50" value="12" step="1">
+            </div>
+
+            <!-- efSearch Slider -->
+            <div class="control-group">
+              <label for="efSearchRange">HNSW Beam Search (efSearch): <span id="efSearchValue" class="value-badge">32</span></label>
+              <input type="range" id="efSearchRange" min="8" max="128" value="32" step="8">
+            </div>
+
+            <!-- Hybrid Alpha Weight Slider -->
+            <div class="control-group" id="alphaSliderGroup">
+              <label for="alphaRange">Hybrid Weight (α): <span id="alphaValue" class="value-badge">70% Vector / 30% BM25</span></label>
+              <input type="range" id="alphaRange" min="0" max="1" value="0.7" step="0.05">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories Navigation Section -->
+    <section class="category-section" id="categories">
+      <div class="quick-categories" id="categoryChips">
+        <button class="category-chip active" data-category="all" type="button">
+          <span class="chip-icon">✦</span> All Knowledge <span class="chip-count" id="countAll">0</span>
+        </button>
+        <button class="category-chip" data-category="documents" type="button">
+          <span class="chip-icon">📄</span> Documents & PDFs <span class="chip-count" id="countDocs">0</span>
+        </button>
+        <button class="category-chip" data-category="images" type="button">
+          <span class="chip-icon">🖼️</span> Visual & Images <span class="chip-count" id="countImages">0</span>
+        </button>
+        <button class="category-chip" data-category="products" type="button">
+          <span class="chip-icon">🛍️</span> Products <span class="chip-count" id="countProducts">0</span>
+        </button>
+        <button class="category-chip" data-category="code" type="button">
+          <span class="chip-icon">&lt;/&gt;</span> Code Search <span class="chip-count" id="countCode">0</span>
+        </button>
+        <button class="category-chip" data-category="audio" type="button">
+          <span class="chip-icon">🎵</span> Music & Audio <span class="chip-count" id="countAudio">0</span>
+        </button>
+        <button class="category-chip" data-category="education" type="button">
+          <span class="chip-icon">🎓</span> Educational <span class="chip-count" id="countEdu">0</span>
+        </button>
+        <button class="category-chip" data-category="web" type="button">🌐 Web</button>
+        <button class="category-chip" data-category="places" type="button">📍 Places / GPS</button>
+        <button class="category-chip" data-category="science" type="button">🔬 Science</button>
+      </div>
+    </section>
+
+    <!-- Results Explorer Section -->
+    <section class="results-section">
+      <div class="results-header">
+        <div class="header-titles">
+          <p class="section-kicker">REAL-TIME UNIVERSAL EXPLORER</p>
+          <h2 id="resultsTitle">Explore Knowledge Collection</h2>
+          <p id="resultsSubtitle" class="muted">Search or choose a domain category to trigger live public APIs and hybrid ranking.</p>
+        </div>
+
+        <div class="results-meta-pill">
+          <div class="meta-item">
+            <span class="meta-label">Match Count:</span>
+            <strong id="resultCountBadge">0 items</strong>
+          </div>
+          <div class="meta-item divider">|</div>
+          <div class="meta-item">
+            <span class="meta-label">Latency:</span>
+            <strong id="latencyBadge" class="highlight-green">⚡ 0.00 ms</strong>
+          </div>
+          <div class="meta-item divider">|</div>
+          <div class="meta-item">
+            <span class="meta-label">Index Engine:</span>
+            <strong id="engineModeBadge">WASM HNSW</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Grid -->
+      <div id="resultsGrid" class="results-grid" aria-live="polite"></div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="empty-state hidden">
+        <div class="empty-icon">⌕</div>
+        <h3>No matching search results found</h3>
+        <p>Try broadening your query, adjusting the distance metric, or switching search modes.</p>
+        <button id="resetSearchBtn" class="nav-btn-secondary" type="button">Reset Filters</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- HNSW Graph Inspector Modal -->
+  <div id="hnswModal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="hnswModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="hnswModalTitle">⚙️ HNSW Graph Inspector</h3>
+        <button class="modal-close-btn" id="closeHnswModalBtn" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-num" id="statNodes">0</span>
+            <span class="stat-label">Indexed Vectors</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="statMaxLevel">0</span>
+            <span class="stat-label">Max Graph Layer (L<sub>max</sub>)</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="statTotalEdges">0</span>
+            <span class="stat-label">Graph Edges (M)</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-num" id="statWasmMem">0.00 MB</span>
+            <span class="stat-label">ANN Backend</span>
+          </div>
+        </div>
+
+        <div class="inspector-section">
+          <h4>HNSW Graph Architecture Parameters</h4>
+          <table class="inspector-table">
+            <tr>
+              <td><strong>Vector Dimension:</strong></td>
+              <td>32 Dense Float32 Features</td>
+            </tr>
+            <tr>
+              <td><strong>Level Multiplier (m<sub>L</sub>):</strong></td>
+              <td id="statMl">1 / ln(16) ≈ 0.36</td>
+            </tr>
+            <tr>
+              <td><strong>Max Connections per Node (M / M<sub>max0</sub>):</strong></td>
+              <td id="statM">16 (Level 0: 32)</td>
+            </tr>
+            <tr>
+              <td><strong>Build Beam Width (efConstruction):</strong></td>
+              <td id="statEfCons">64</td>
+            </tr>
+            <tr>
+              <td><strong>Search Beam Width (efSearch):</strong></td>
+              <td id="statEfSearch">32</td>
+            </tr>
+            <tr>
+              <td><strong>Active Distance Metric:</strong></td>
+              <td id="statActiveMetric">Cosine Distance</td>
+            </tr>
+            <tr>
+              <td><strong>Execution Engine:</strong></td>
+              <td>WebAssembly 1.0 (SIMD Aligned Linear Buffer)</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="inspector-section">
+          <h4>Hierarchical Skip-Graph Visualization</h4>
+          <div class="graph-visualizer">
+            <div class="graph-layer layer-3">
+              <span class="layer-title">Layer 3 (Top Entry)</span>
+              <div class="layer-nodes" id="nodesLayer3">
+                <span class="node-dot entry">● EP</span>
+              </div>
+            </div>
+            <div class="graph-layer layer-2">
+              <span class="layer-title">Layer 2 (Greedy Routing)</span>
+              <div class="layer-nodes" id="nodesLayer2">
+                <span class="node-dot">●</span><span class="node-dot">●</span>
+              </div>
+            </div>
+            <div class="graph-layer layer-1">
+              <span class="layer-title">Layer 1 (Candidate Selection)</span>
+              <div class="layer-nodes" id="nodesLayer1">
+                <span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span>
+              </div>
+            </div>
+            <div class="graph-layer layer-0">
+              <span class="layer-title">Layer 0 (Base Graph - Full Collection)</span>
+              <div class="layer-nodes" id="nodesLayer0">
+                <span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span><span class="node-dot">●</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="rebuildHnswBtn" class="nav-btn-primary" type="button">Rebuild HNSW Index</button>
+        <button class="modal-close-btn-secondary" id="closeHnswModalBtn2" type="button">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Item Viewer Modal -->
+  <div id="detailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card modal-card-large">
+      <div class="modal-header">
+        <h3 id="detailTitle">Item Details</h3>
+        <button class="modal-close-btn" id="closeDetailModalBtn" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body" id="detailBody">
+        <!-- Dynamic detail content rendered by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- File Ingest Upload Modal -->
+  <div id="ingestModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📤 Ingest and Index Files</h3>
+        <button class="modal-close-btn" id="closeIngestModalBtn" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-intro">
+          Upload supported files up to 12 MB. Text/code files are extracted directly; PDF and DOCX extraction uses optional Python libraries. Uploaded vectors are held in server memory for this running process.
+        </p>
+
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">📁</div>
+          <h4>Drag and drop files here</h4>
+          <p class="muted">Supports PDF, DOCX, TXT, PNG, JPG, JS, PY, RS, MP3, WAV</p>
+          <input type="file" id="fileInput" class="hidden-file-input" multiple accept=".pdf,.docx,.txt,.md,.png,.jpg,.jpeg,.js,.py,.rs,.cpp,.mp3,.wav">
+          <button id="browseFilesBtn" class="nav-btn-secondary" type="button">Browse Files</button>
+        </div>
+
+        <div id="ingestStatus" class="ingest-status hidden"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- AI Answer Engine Chat -->
+  <div id="aiChatModal" class="modal-backdrop ai-chat-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="aiChatTitle">
+    <section class="ai-chat-card">
+      <header class="ai-chat-header">
+        <div class="ai-chat-heading">
+          <span class="ai-chat-avatar">✦</span>
+          <div>
+            <h2 id="aiChatTitle">OmniFind AI</h2>
+            <p>Answers grounded in live search results</p>
+          </div>
+        </div>
+        <button id="closeAiChatBtn" class="modal-close-btn" type="button" aria-label="Close AI chat">✕</button>
+      </header>
+      <div class="ai-chat-trust"><span class="ai-live-dot"></span> Live public API retrieval <span class="ai-trust-separator">·</span> Source links included</div>
+      <div id="aiChatMessages" class="ai-chat-messages" aria-live="polite">
+        <div class="ai-chat-welcome">
+          <span class="ai-welcome-icon">✦</span>
+          <h3>What would you like to know?</h3>
+          <p>Ask a question. OmniFind retrieves relevant public API results and uses the AI service to create a cited answer.</p>
+          <div class="ai-suggestion-row">
+            <button type="button" class="ai-suggestion" data-ai-prompt="Explain HNSW vector search in simple terms">Explain HNSW</button>
+            <button type="button" class="ai-suggestion" data-ai-prompt="Find recent research about transformer neural networks">Transformer research</button>
+            <button type="button" class="ai-suggestion" data-ai-prompt="What are the main advantages and limitations of semantic search?">Semantic search</button>
+          </div>
+        </div>
+      </div>
+      <form id="aiChatForm" class="ai-chat-composer">
+        <label class="sr-only" for="aiChatInput">Ask OmniFind AI</label>
+        <textarea id="aiChatInput" rows="1" maxlength="2000" placeholder="Ask anything… (Enter to send, Shift+Enter for a new line)" required></textarea>
+        <button id="aiChatSendBtn" class="ai-chat-send" type="submit" aria-label="Send message"><span>Send</span> <span aria-hidden="true">➤</span></button>
+      </form>
+      <p class="ai-chat-disclaimer">AI answers can be wrong. Check the linked sources. API usage may incur charges.</p>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-top">
+      <a class="brand footer-brand" href="#">
+        <span class="brand-mark">✦</span> OmniFind Universal Search
+      </a>
+      <p class="footer-copy">
+        Built with public data APIs, hybrid ranking, feature-hashed vectors, and optional server-side hnswlib HNSW.
+      </p>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 OmniFind WebAssembly Vector Engine</span>
+      <span class="footer-links">
+        <a href="#search">Search Engine</a> · 
+        <a href="#categories">Domain Categories</a> · 
+        <a href="hnsw_engine.cpp">C++ Source (hnsw_engine.cpp)</a>
+      </span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="dataset.js"></script>
+  <script src="embeddings.js"></script>
+  <script src="hnsw_wasm.js"></script>
+  <script src="ingest.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
